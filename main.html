@@ -12,18 +12,17 @@
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background: #121212; /* Dark mode background */
+      background: #121212;
+      color: #f0f0f0;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
       align-items: center;
-      padding: 1rem;
-      color: #eee;
+      padding: 1.5rem;
+      min-height: 100vh;
     }
     h1 {
       margin-bottom: 1rem;
-      color: #bb86fc;
-      text-align: center;
+      color: #ffffff;
     }
     #messageForm {
       display: flex;
@@ -35,19 +34,15 @@
       flex-grow: 1;
       padding: 0.75rem 1rem;
       font-size: 1rem;
-      border: 1.5px solid #444;
+      border: 1px solid #555;
       border-radius: 8px 0 0 8px;
       outline: none;
-      background: #222;
-      color: #eee;
-      transition: border-color 0.3s;
-    }
-    #messageInput:focus {
-      border-color: #bb86fc;
+      background: #1e1e1e;
+      color: #fff;
     }
     #sendButton {
-      background: #bb86fc;
-      color: #121212;
+      background: #4a90e2;
+      color: white;
       border: none;
       padding: 0 1.5rem;
       font-size: 1rem;
@@ -56,7 +51,7 @@
       transition: background-color 0.3s;
     }
     #sendButton:hover {
-      background: #9f6efc;
+      background: #357ABD;
     }
     #messages {
       width: 100%;
@@ -64,25 +59,21 @@
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      max-height: 70vh;
-      overflow-y: auto;
-      padding-right: 0.5rem;
     }
     .message-card {
       background: #1e1e1e;
-      padding: 1rem 1.25rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       word-wrap: break-word;
-      color: #eee;
     }
     .timestamp {
       font-size: 0.75rem;
-      color: #888;
-      margin-top: 0.25rem;
+      color: #999;
+      margin-top: 0.5rem;
       text-align: right;
     }
-    @media (max-width: 400px) {
+    @media (max-width: 480px) {
       #messageForm {
         flex-direction: column;
       }
@@ -109,43 +100,48 @@
   <div id="messages"></div>
 
   <script>
-    // Replace the values below with your actual Firebase project config from Firebase Console
+    // 🔐 Require passkey on page load
+    const requiredPasskey = "orchard";
+    const userInput = prompt("Enter passkey to access the chat:");
+    if (userInput !== requiredPasskey) {
+      alert("Incorrect passkey. Reloading...");
+      location.reload();
+    }
+
+    // 🔥 Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCRXboa-6fnQfbHRsJNn8peNc680-QZa7I",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
+      authDomain: "hello-world-99103.firebaseapp.com",
+      projectId: "hello-world-99103",
+      storageBucket: "hello-world-99103.firebasestorage.app",
+      messagingSenderId: "132066053112",
+      appId: "1:132066053112:web:91a766c8af6a1df953640d",
+      measurementId: "G-YQ3HPCVWBC"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
     const messagesRef = db.collection('messages');
 
     const messageForm = document.getElementById('messageForm');
     const messageInput = document.getElementById('messageInput');
     const messagesDiv = document.getElementById('messages');
 
+    // Send message on submit
     messageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      let message = messageInput.value.trim();
+      const message = messageInput.value.trim();
       if (message.length === 0) return;
 
-      try {
-        await messagesRef.add({
-          text: message,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        messageInput.value = '';
-      } catch (err) {
-        console.error("Error adding message: ", err);
-      }
+      await messagesRef.add({
+        text: message,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      messageInput.value = '';
     });
 
+    // Format timestamp
     function formatDate(timestamp) {
       if (!timestamp) return '';
       const date = timestamp.toDate();
@@ -158,7 +154,7 @@
       });
     }
 
-    // Real-time listener for messages collection
+    // Load messages in real-time
     messagesRef.orderBy('createdAt', 'desc').limit(50).onSnapshot(snapshot => {
       messagesDiv.innerHTML = '';
       snapshot.forEach(doc => {

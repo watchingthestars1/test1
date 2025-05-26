@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Firebase Chat (Secure)</title>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
+</head>
+<body>
+  <h2>Simple Firebase Chat</h2>
+  <form id="chat-form">
+    <input type="text" id="name" placeholder="Your name" required><br><br>
+    <textarea id="message" placeholder="Your message" required></textarea><br><br>
+    <button type="submit">Send</button>
+  </form>
+
+  <h3>Messages</h3>
+  <ul id="chat-box"></ul>
+
+  <script>
+    // ✅ Your actual Firebase config with your API key
+    const firebaseConfig = {
+      apiKey: "BOD422G_w26YrTsxeeF8UG7rzTmtA6qM9SJcRNntRxGkPev16hCB3YKIucJ-YH-TG4lS9M-lW7_55bGgO1QTwL0",
+      authDomain: "your-project-id.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project-id.appspot.com",
+      messagingSenderId: "YOUR_MSG_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialise Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // 🔐 Sign in anonymously
+    auth.signInAnonymously().catch(console.error);
+
+    // 💬 Submit message
+    document.getElementById("chat-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const text = document.getElementById("message").value.trim();
+
+      if (!name || !text) return;
+
+      await db.collection("messages").add({
+        name,
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      document.getElementById("message").value = "";
+    });
+
+    // 🔄 Load messages in real-time
+    db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML = "";
+      snapshot.forEach(doc => {
+        const msg = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${msg.name}: ${msg.text}`;
+        chatBox.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>

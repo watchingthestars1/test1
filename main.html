@@ -113,7 +113,7 @@
       apiKey: "AIzaSyCRXboa-6fnQfbHRsJNn8peNc680-QZa7I",
       authDomain: "hello-world-99103.firebaseapp.com",
       projectId: "hello-world-99103",
-      storageBucket: "hello-world-99103.firebasestorage.app",
+      storageBucket: "hello-world-99103.appspot.com",
       messagingSenderId: "132066053112",
       appId: "1:132066053112:web:91a766c8af6a1df953640d",
       measurementId: "G-YQ3HPCVWBC"
@@ -135,7 +135,7 @@
 
       await messagesRef.add({
         text: message,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: new Date() // Use client's current timestamp
       });
 
       messageInput.value = '';
@@ -144,7 +144,7 @@
     // Format timestamp
     function formatDate(timestamp) {
       if (!timestamp) return '';
-      const date = timestamp.toDate();
+      const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
       return date.toLocaleString(undefined, {
         year: 'numeric',
         month: 'short',

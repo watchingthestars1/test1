@@ -2,141 +2,171 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Modern Firebase Chat</title>
-  
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
 
   <style>
-    :root {
-      --bg: #121212;
-      --card: #1e1e1e;
-      --input: #2c2c2c;
-      --text: #e0e0e0;
-      --accent: #00bcd4;
-    }
-
     body {
       margin: 0;
-      padding: 20px;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
       align-items: center;
+      padding: 1rem;
+      color: #333;
     }
-
-    h2 {
-      color: var(--accent);
+    h1 {
+      margin-bottom: 1rem;
+      color: #2c3e50;
+      text-align: center;
     }
-
-    form {
-      background: var(--card);
-      padding: 16px;
-      border-radius: 12px;
+    #messageForm {
+      display: flex;
       width: 100%;
-      max-width: 500px;
-      box-shadow: 0 0 10px #00000050;
-      margin-bottom: 20px;
+      max-width: 600px;
+      margin-bottom: 1rem;
     }
-
-    input, textarea, button {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      background: var(--input);
-      border: none;
-      border-radius: 8px;
-      color: var(--text);
+    #messageInput {
+      flex-grow: 1;
+      padding: 0.75rem 1rem;
       font-size: 1rem;
+      border: 1.5px solid #ccc;
+      border-radius: 8px 0 0 8px;
+      outline: none;
+      transition: border-color 0.3s;
     }
-
-    button {
-      background: var(--accent);
-      color: #000;
+    #messageInput:focus {
+      border-color: #4a90e2;
+    }
+    #sendButton {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 0 1.5rem;
+      font-size: 1rem;
       cursor: pointer;
-      font-weight: bold;
+      border-radius: 0 8px 8px 0;
+      transition: background-color 0.3s;
     }
-
-    ul {
-      list-style: none;
-      padding: 0;
+    #sendButton:hover {
+      background: #357ABD;
+    }
+    #messages {
       width: 100%;
-      max-width: 500px;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
-
-    li {
-      background: var(--card);
-      margin: 8px 0;
-      padding: 12px;
-      border-radius: 10px;
+    .message-card {
+      background: white;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
       word-wrap: break-word;
-      box-shadow: 0 0 5px #00000030;
+    }
+    .timestamp {
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 0.25rem;
+      text-align: right;
+    }
+    @media (max-width: 400px) {
+      #messageForm {
+        flex-direction: column;
+      }
+      #messageInput, #sendButton {
+        border-radius: 8px;
+        width: 100%;
+        margin: 0.25rem 0;
+      }
     }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h2>💬 Firebase Chat</h2>
+  <h1>Chat</h1>
 
-  <form id="chat-form">
-    <input type="text" id="name" placeholder="Your name" required />
-    <textarea id="message" placeholder="Your message" required></textarea>
-    <button type="submit">Send</button>
+  <form id="messageForm">
+    <input type="text" id="messageInput" placeholder="Write a message..." autocomplete="off" required />
+    <button type="submit" id="sendButton">Send</button>
   </form>
 
-  <ul id="chat-box"></ul>
+  <div id="messages"></div>
 
   <script>
-    // ✅ Replace this config with your Firebase project info
+    // Firebase config
     const firebaseConfig = {
-      apiKey: "BOD422G_w26YrTsxeeF8UG7rzTmtA6qM9SJcRNntRxGkPev16hCB3YKIucJ-YH-TG4lS9M-lW7_55bGgO1QTwL0",
-      authDomain: "your-project-id.firebaseapp.com",
-      projectId: "your-project-id",
-      storageBucket: "your-project-id.appspot.com",
-      messagingSenderId: "your-messaging-id",
-      appId: "your-app-id"
+      apiKey: "AIzaSyCRXboa-6fnQfbHRsJNn8peNc680-QZa7I",
+      authDomain: "mental-health-wall.firebaseapp.com",
+      projectId: "mental-health-wall",
+      storageBucket: "mental-health-wall.appspot.com",
+      messagingSenderId: "263931688805",
+      appId: "1:263931688805:web:02567bddb9166202cb538c",
+      measurementId: "G-JXCEQXYL08"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 🔐 Anonymous sign-in
-    auth.signInAnonymously().catch(console.error);
+    const messagesRef = db.collection('messages');
 
-    // 📨 Message submission
-    document.getElementById("chat-form").addEventListener("submit", async (e) => {
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const messagesDiv = document.getElementById('messages');
+
+    messageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      const text = document.getElementById("message").value.trim();
-      if (!name || !text) return;
+      let message = messageInput.value.trim();
+      if (message.length === 0) return;
 
-      await db.collection("messages").add({
-        name,
-        text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      // Save message to Firestore with timestamp
+      await messagesRef.add({
+        text: message,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      document.getElementById("message").value = "";
+      messageInput.value = '';
     });
 
-    // 🔄 Real-time message updates
-    db.collection("messages")
-      .orderBy("timestamp")
-      .onSnapshot(snapshot => {
-        const chatBox = document.getElementById("chat-box");
-        chatBox.innerHTML = "";
-        snapshot.forEach(doc => {
-          const msg = doc.data();
-          const li = document.createElement("li");
-          li.textContent = `${msg.name}: ${msg.text}`;
-          chatBox.appendChild(li);
-        });
+    function formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = timestamp.toDate();
+      return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
+    }
+
+    // Real-time listener for messages collection
+    messagesRef.orderBy('createdAt', 'desc').limit(50).onSnapshot(snapshot => {
+      messagesDiv.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const messageCard = document.createElement('div');
+        messageCard.className = 'message-card';
+        messageCard.textContent = data.text;
+
+        const timestampDiv = document.createElement('div');
+        timestampDiv.className = 'timestamp';
+        timestampDiv.textContent = formatDate(data.createdAt);
+
+        messageCard.appendChild(timestampDiv);
+        messagesDiv.appendChild(messageCard);
+      });
+    });
   </script>
 </body>
 </html>

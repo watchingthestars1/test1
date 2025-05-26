@@ -55,6 +55,11 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       word-wrap: break-word;
     }
+    .username {
+      font-weight: bold;
+      color: #ffa500;
+      margin-bottom: 0.25rem;
+    }
     .timestamp {
       font-size: 0.75rem;
       color: #aaa;
@@ -71,22 +76,32 @@
   <h1>Chat</h1>
 
   <form id="messageForm">
-    <input type="text" id="messageInput" placeholder="Type your message..." required />
+    <input type="text" id="messageInput" placeholder="Type your message..." required autocomplete="off" />
     <button type="submit" id="sendButton">Send</button>
   </form>
 
   <div id="messages"></div>
 
   <script>
-    // 🔐 Prompt for passkey
-    const userInput = prompt("Enter the passkey:");
-    if (userInput !== "orchard") {
+    // Prompt for passkey "orchard"
+    const passkey = prompt("Enter the passkey:");
+    if (passkey !== "orchard") {
       alert("Incorrect passkey. Please refresh the page.");
       document.body.innerHTML = "<h2>Access Denied</h2>";
       throw new Error("Access denied");
     }
 
-    // ✅ Firebase configuration
+    // Prompt for username
+    let username = "";
+    while (!username) {
+      username = prompt("Enter your username:");
+      if (username) {
+        username = username.trim();
+      }
+      if (!username) alert("Username cannot be empty.");
+    }
+
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCRXboa-6fnQfbHRsJNn8peNc680-QZa7I",
       authDomain: "hello-world-99103.firebaseapp.com",
@@ -96,6 +111,7 @@
       appId: "1:132066053112:web:91a766c8af6a1df953640d"
     };
 
+    // Initialise Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const messagesRef = db.collection("messages");
@@ -104,42 +120,48 @@
     const input = document.getElementById("messageInput");
     const messagesDiv = document.getElementById("messages");
 
-    // 📨 Handle message sending
+    // Send message with username
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const text = input.value.trim();
       if (text.length === 0) return;
 
       await messagesRef.add({
-        text,
+        username: username,
+        text: text,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       input.value = "";
     });
 
-    // ⏱️ Format date
+    // Format timestamp nicely
     function formatTimestamp(timestamp) {
       if (!timestamp) return "";
       const date = timestamp.toDate();
       return date.toLocaleString();
     }
 
-    // 🔄 Real-time listener
+    // Real-time listener for messages
     messagesRef.orderBy("createdAt", "desc").limit(50).onSnapshot(snapshot => {
       messagesDiv.innerHTML = "";
       snapshot.forEach(doc => {
         const data = doc.data();
         const card = document.createElement("div");
         card.className = "message-card";
+
+        // Show username + message + timestamp
         card.innerHTML = `
+          <div class="username">${data.username || "Unknown"}</div>
           <div>${data.text}</div>
           <div class="timestamp">${formatTimestamp(data.createdAt)}</div>
         `;
+
         messagesDiv.appendChild(card);
       });
     });
   </script>
 </body>
 </html>
+
 

@@ -12,17 +12,17 @@
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background: #f5f7fa;
+      background: #121212; /* Dark mode background */
       display: flex;
       flex-direction: column;
       min-height: 100vh;
       align-items: center;
       padding: 1rem;
-      color: #333;
+      color: #eee;
     }
     h1 {
       margin-bottom: 1rem;
-      color: #2c3e50;
+      color: #bb86fc;
       text-align: center;
     }
     #messageForm {
@@ -35,17 +35,19 @@
       flex-grow: 1;
       padding: 0.75rem 1rem;
       font-size: 1rem;
-      border: 1.5px solid #ccc;
+      border: 1.5px solid #444;
       border-radius: 8px 0 0 8px;
       outline: none;
+      background: #222;
+      color: #eee;
       transition: border-color 0.3s;
     }
     #messageInput:focus {
-      border-color: #4a90e2;
+      border-color: #bb86fc;
     }
     #sendButton {
-      background: #4a90e2;
-      color: white;
+      background: #bb86fc;
+      color: #121212;
       border: none;
       padding: 0 1.5rem;
       font-size: 1rem;
@@ -54,7 +56,7 @@
       transition: background-color 0.3s;
     }
     #sendButton:hover {
-      background: #357ABD;
+      background: #9f6efc;
     }
     #messages {
       width: 100%;
@@ -62,17 +64,21 @@
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 0.5rem;
     }
     .message-card {
-      background: white;
+      background: #1e1e1e;
       padding: 1rem 1.25rem;
       border-radius: 12px;
-      box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
       word-wrap: break-word;
+      color: #eee;
     }
     .timestamp {
-      font-size: 0.8rem;
-      color: #999;
+      font-size: 0.75rem;
+      color: #888;
       margin-top: 0.25rem;
       text-align: right;
     }
@@ -103,15 +109,15 @@
   <div id="messages"></div>
 
   <script>
-    // Firebase config
+    // Replace the values below with your actual Firebase project config from Firebase Console
     const firebaseConfig = {
       apiKey: "AIzaSyCRXboa-6fnQfbHRsJNn8peNc680-QZa7I",
-      authDomain: "mental-health-wall.firebaseapp.com",
-      projectId: "mental-health-wall",
-      storageBucket: "mental-health-wall.appspot.com",
-      messagingSenderId: "263931688805",
-      appId: "1:263931688805:web:02567bddb9166202cb538c",
-      measurementId: "G-JXCEQXYL08"
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
     };
 
     // Initialize Firebase
@@ -129,13 +135,15 @@
       let message = messageInput.value.trim();
       if (message.length === 0) return;
 
-      // Save message to Firestore with timestamp
-      await messagesRef.add({
-        text: message,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      messageInput.value = '';
+      try {
+        await messagesRef.add({
+          text: message,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        messageInput.value = '';
+      } catch (err) {
+        console.error("Error adding message: ", err);
+      }
     });
 
     function formatDate(timestamp) {

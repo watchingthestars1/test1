@@ -4,25 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chat</title>
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
-
   <style>
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
       background: #121212;
-      color: #f0f0f0;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1.5rem;
-      min-height: 100vh;
+      padding: 2rem;
     }
     h1 {
-      margin-bottom: 1rem;
-      color: #ffffff;
+      color: #ffa500;
     }
     #messageForm {
       display: flex;
@@ -31,27 +26,20 @@
       margin-bottom: 1rem;
     }
     #messageInput {
-      flex-grow: 1;
-      padding: 0.75rem 1rem;
-      font-size: 1rem;
-      border: 1px solid #555;
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
       border-radius: 8px 0 0 8px;
-      outline: none;
-      background: #1e1e1e;
-      color: #fff;
+      font-size: 1rem;
     }
     #sendButton {
-      background: #4a90e2;
-      color: white;
+      background: #ffa500;
       border: none;
-      padding: 0 1.5rem;
+      color: white;
+      padding: 0.75rem 1.5rem;
       font-size: 1rem;
       cursor: pointer;
       border-radius: 0 8px 8px 0;
-      transition: background-color 0.3s;
-    }
-    #sendButton:hover {
-      background: #357ABD;
     }
     #messages {
       width: 100%;
@@ -61,27 +49,17 @@
       gap: 0.75rem;
     }
     .message-card {
-      background: #1e1e1e;
+      background: #1f1f1f;
       padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       word-wrap: break-word;
     }
     .timestamp {
       font-size: 0.75rem;
-      color: #999;
+      color: #aaa;
       margin-top: 0.5rem;
       text-align: right;
-    }
-    @media (max-width: 480px) {
-      #messageForm {
-        flex-direction: column;
-      }
-      #messageInput, #sendButton {
-        border-radius: 8px;
-        width: 100%;
-        margin: 0.25rem 0;
-      }
     }
   </style>
 
@@ -93,84 +71,75 @@
   <h1>Chat</h1>
 
   <form id="messageForm">
-    <input type="text" id="messageInput" placeholder="Write a message..." autocomplete="off" required />
+    <input type="text" id="messageInput" placeholder="Type your message..." required />
     <button type="submit" id="sendButton">Send</button>
   </form>
 
   <div id="messages"></div>
 
   <script>
-    // 🔐 Require passkey on page load
-    const requiredPasskey = "orchard";
-    const userInput = prompt("Enter passkey to access the chat:");
-    if (userInput !== requiredPasskey) {
-      alert("Incorrect passkey. Reloading...");
-      location.reload();
+    // 🔐 Prompt for passkey
+    const userInput = prompt("Enter the passkey:");
+    if (userInput !== "orchard") {
+      alert("Incorrect passkey. Please refresh the page.");
+      document.body.innerHTML = "<h2>Access Denied</h2>";
+      throw new Error("Access denied");
     }
 
-    // 🔥 Firebase configuration
+    // ✅ Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCRXboa-6fnQfbHRsJNn8peNc680-QZa7I",
       authDomain: "hello-world-99103.firebaseapp.com",
       projectId: "hello-world-99103",
       storageBucket: "hello-world-99103.appspot.com",
       messagingSenderId: "132066053112",
-      appId: "1:132066053112:web:91a766c8af6a1df953640d",
-      measurementId: "G-YQ3HPCVWBC"
+      appId: "1:132066053112:web:91a766c8af6a1df953640d"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const messagesRef = db.collection('messages');
+    const messagesRef = db.collection("messages");
 
-    const messageForm = document.getElementById('messageForm');
-    const messageInput = document.getElementById('messageInput');
-    const messagesDiv = document.getElementById('messages');
+    const form = document.getElementById("messageForm");
+    const input = document.getElementById("messageInput");
+    const messagesDiv = document.getElementById("messages");
 
-    // Send message on submit
-    messageForm.addEventListener('submit', async (e) => {
+    // 📨 Handle message sending
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const message = messageInput.value.trim();
-      if (message.length === 0) return;
+      const text = input.value.trim();
+      if (text.length === 0) return;
 
       await messagesRef.add({
-        text: message,
-        createdAt: new Date() // Use client's current timestamp
+        text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      messageInput.value = '';
+      input.value = "";
     });
 
-    // Format timestamp
-    function formatDate(timestamp) {
-      if (!timestamp) return '';
-      const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
-      return date.toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    // ⏱️ Format date
+    function formatTimestamp(timestamp) {
+      if (!timestamp) return "";
+      const date = timestamp.toDate();
+      return date.toLocaleString();
     }
 
-    // Load messages in real-time
-    messagesRef.orderBy('createdAt', 'desc').limit(50).onSnapshot(snapshot => {
-      messagesDiv.innerHTML = '';
+    // 🔄 Real-time listener
+    messagesRef.orderBy("createdAt", "desc").limit(50).onSnapshot(snapshot => {
+      messagesDiv.innerHTML = "";
       snapshot.forEach(doc => {
         const data = doc.data();
-        const messageCard = document.createElement('div');
-        messageCard.className = 'message-card';
-        messageCard.textContent = data.text;
-
-        const timestampDiv = document.createElement('div');
-        timestampDiv.className = 'timestamp';
-        timestampDiv.textContent = formatDate(data.createdAt);
-
-        messageCard.appendChild(timestampDiv);
-        messagesDiv.appendChild(messageCard);
+        const card = document.createElement("div");
+        card.className = "message-card";
+        card.innerHTML = `
+          <div>${data.text}</div>
+          <div class="timestamp">${formatTimestamp(data.createdAt)}</div>
+        `;
+        messagesDiv.appendChild(card);
       });
     });
   </script>
 </body>
 </html>
+
